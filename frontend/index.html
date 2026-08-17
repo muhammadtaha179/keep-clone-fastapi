@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=b, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    #submit-btn{
+        margin-left: 130px;
+        background-color: #16A34A;;
+        color: white;
+        border-radius: 6px;
+        padding: 8px 14px;
+        border: none;
+    }
+
+    #delete{
+           background-color: #DC2626;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    }
+    .edit{
+         background-color: #2563EB;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    }
+    .note{
+        border: 1px solid black;
+         height: 30%;
+        width: 10%;
+        margin-bottom: 20px;
+        margin-right: 20px;
+        margin-top: 20px;
+        
+    }
+    #title{
+        height: 25px;
+        width: 300px;
+        margin-bottom: 30px;
+
+    }
+    #content{
+        height: 150px;
+        width: 300px;
+    }
+    
+    #label{
+        margin-bottom: 207px;
+    }
+    .label{
+        margin-right: 25px;
+    }
+.content-title {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+</style>
+<body>
+   <div class="title-content">
+    <div>
+    <label for="" class="label">Add Title</label>
+    <input type="text" id="title">
+ </div>
+ <div>
+    <label for="" id="label">Add Content</label>
+    <textarea name="" id="content"></textarea>
+</div>    
+</div>
+    
+    <br>
+   
+    <button id="submit-btn" onclick="addNote()">Add Note</button>
+    <div id="notes" style="display: flex; flex-direction:row;"></div>
+</body>
+<script>
+    let editingId = null;
+    const API = "http://localhost:8000/notes";
+
+    async function loadNotes() {
+        // The result receives an object called containing status, header and body
+        
+         const result = await fetch(API);
+         const data = await result.json();
+         const container=document.getElementById("notes");
+container.innerHTML = "";
+data.forEach(note => {
+    container.innerHTML += `
+    <div class="note">
+    <b>${note.title}</b>
+    <p>${note.content}</p>
+    <button onclick="deleteNote(${note.id})">Delete</button>
+    <button class="edit" onclick="editNote(${note.id}, '${note.title}', '${note.content}')">Edit</button>
+    </div>
+    `;
+});
+             
+    }
+    async function addNote() {
+       const title=document.getElementById("title").value;
+       const content=document.getElementById("content").value;
+       if (editingId == null){
+        await fetch(API, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({title, content})
+
+        }
+    
+        );
+    }
+    else{
+        await fetch(`${API}/${editingId}`, {
+        method: "PUT",
+        headers: {
+                "Content-Type": "application/json"
+            },
+        body:JSON.stringify({ title, content })
+        })
+    }
+    editingId = null;
+    document.getElementById("submit-btn").textContent="Add Note";
+        document.getElementById("title").value="";
+        document.getElementById("content").value="";
+        loadNotes();
+        
+    }
+loadNotes();
+ async function deleteNote(id) {
+    
+    await fetch(`${API}/${id}`, { method: "DELETE" });
+    loadNotes();
+}
+function editNote(id, title, content){
+    editingId = id;
+    document.getElementById("title").value = title;
+    document.getElementById("content").value = content;
+    document.getElementById("submit-btn").textContent = "Update Now";
+    }
+</script>
+</html>
